@@ -1,0 +1,40 @@
+.dark-version .sidenav {
+    background: #1f283e !important
+}
+
+.dark-version .sidenav.bg-transparent {
+    background: transparent !important
+}
+
+.dark-version .sidenav.bg-transparent .nav .nav-link,
+.dark-version .sidenav.bg-transparent .navbar-nav .nav-link {
+    color: #fff !important
+}
+
+.dark-version .sidenav.bg-white {
+    background: #fff !important
+}
+
+.dark-version .sidenav.bg-white .navbar-nav .nav-link.active:after {
+    color: rgba(206, 212, 218, .7)
+}
+
+.dark-version .sidenav.bg-white .collapse .nav-item .h6,
+.dark-version .sidenav.bg-white .collapse .nav-item .nav-link:not(.active) i,
+.dark-version .sidenav.bg-white .collapse .nav-item h6 {
+    color: #344767 !important
+}
+
+.dark-version .sidenav .collapse .nav-item .nav-link i {
+    color: #fff !important
+}
+
+.dark-version .sidenav.bg-white .collapse .nav-item .nav-link.active.text-dark .nav-link-text,
+.dark-version .sidenav.bg-white .collapse .nav-item .nav-link.active.text-dark i {
+    color: #344767 !important
+}
+
+.rtl .sidenav .navbar-nav {
+    width: 100%;
+    padding-right: 0
+}
