@@ -15,7 +15,7 @@ import axios from 'axios';
 import { isExpired, decodeToken } from "react-jwt";
 import { useNavigate } from "react-router-dom";
 import img1 from '../assets/img/01.png';
-
+import ringingaudio from "../assets/img/ringing.mp3"
 
 const socket = io.connect(`${process.env.REACT_APP_VIDEOCALL_URL}`)
 function Call() {
@@ -42,6 +42,7 @@ function Call() {
 	const isexpire = isExpired(token);
 	var [loader, setloader] = useState(false);
 	var once = useRef(true);
+	var ringavd = useRef();
 	const sendmail = async (e, id) => {
 		var data = { patientemail: appointmentdata.patientemail, patientname: appointmentdata.patientname, callid: id }
 		const res = await axios.post(`${process.env.REACT_APP_BASE_URL}/sendvideocallid`, data);
@@ -53,6 +54,7 @@ function Call() {
 	};
 
 	useEffect(() => {
+		ringavd.current = ringingaudio
 		if (once.current) {
 			if (!token) {
 				setloader(true);
@@ -77,13 +79,11 @@ function Call() {
 				}
 			}
 		}
-		const myav = document.getElementById("myav");
-
 
 		socket.current = io.connect(`${process.env.REACT_APP_VIDEOCALL_URL}`);
 		navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
 
-			myav.srcObject = stream;
+
 			setStream(stream);
 			console.log(stream);
 			myVideo.current.srcObject = stream
@@ -98,11 +98,11 @@ function Call() {
 		})
 
 		socket.on("callUser", (data) => {
-			// console.log(data);
 			setReceivingCall(true)
 			setCaller(data.from)
 			setName(data.name)
 			setCallerSignal(data.signal)
+			socket.emit("sendringing", (data));
 		})
 		socket.on("endfrompatient", (data) => {
 			if (data.callend == true) {
@@ -112,6 +112,11 @@ function Call() {
 				setTimeout(() => {
 					window.location.reload();
 				}, 3000);
+			}
+		});
+		socket.on("misscall", (data) => {
+			if (data.callend == true) {
+				window.location.reload();
 			}
 		});
 	}, []);
@@ -127,42 +132,8 @@ function Call() {
 		}
 	}, [restate])
 
-
-	// const callUser = (id) => {
-	// const peer = new Peer({
-	// 	initiator: true,
-	// 	trickle: false,
-	// 	stream: stream
-	// })
-	// peer.on("signal", (data) => {
-	// 	socket.emit("callUser", {
-	// 		userToCall: id,
-	// 		signalData: data,
-	// 		from: me,
-	// 		name: name
-	// 	})
-	// 	console.log("call user data", data);
-	// })
-	// peer.on("stream", (stream) => {
-
-	// 	userVideo.current.srcObject = stream
-
-	// })
-	// socket.on("callAccepted", (signal) => {
-	// 	setCallAccepted(true)
-	// 	peer.signal(signal)
-	// })
-	// 	socket.on("callEnded", () => {
-	// 		setCallEnded(true);
-	// 		connectionRef.current.destroy();
-	// 		window.location.reload();
-	// 	});
-
-
-	// 	connectionRef.current = peer
-	// }
-
 	const answerCall = () => {
+		ringavd.current = null;
 		setCallAccepted(true)
 		setsendstatus(true);
 		const peer = new Peer({
@@ -184,14 +155,21 @@ function Call() {
 	}
 
 	const leaveCall = () => {
-		console.log("leavecall called");
-		socket.emit("doctordisconnect", { callend: true, to: caller });
-		setCallEnded(true)
-		setsendstatus(false);
-		connectionRef.current.destroy();
-		setTimeout(() => {
+		if (callAccepted) {
+			socket.emit("doctordisconnect", { callend: true, to: caller });
+			setCallEnded(true)
+			setsendstatus(false);
+			connectionRef.current.destroy();
+			setTimeout(() => {
+				window.location.reload();
+			}, 3000)
+		}
+		else {
+			console.log("else called");
+			socket.emit("doctorbusy", { busy: true, to: caller });
 			window.location.reload();
-		}, 3000)
+
+		}
 	}
 
 	return (
@@ -199,9 +177,14 @@ function Call() {
 			<div>
 				{loader ? (
 					<>
-						<div class="d-flex justify-content-center">
-							<div class="spinner-border text-primary " role="status">
-								<span class="sr-only"></span>
+						<div class="d-flex align-items-center justify-content-center vh-100">
+							<div class="text-center">
+								<h1 class="display-1 fw-bold">401</h1>
+								<p class="fs-3"> <span class="text-danger">Opps!</span> You have to login first</p>
+								<p class="lead">
+									Got ot login page
+								</p>
+								<a href="/doclogin" class="btn btn-primary">Login</a>
 							</div>
 						</div>
 					</>
@@ -214,11 +197,7 @@ function Call() {
 								<br></br>
 								<hr></hr>
 								<a href="/doctordash"><li><img src="https://e7.pngegg.com/pngimages/703/597/png-clipart-logo-house-home-house-angle-building.png" class="active" /></li></a>
-								{/* <li><img src="https://i.postimg.cc/JnggC78Q/video.png" /></li>
-								<li><img src="https://i.postimg.cc/vmb3JgVy/message.png" /></li>
-								<li><img src="https://i.postimg.cc/qR7Q7PwZ/notification.png" /></li>
-								<li><img src="https://i.postimg.cc/k4DZH604/users.png" /></li>
-								<li><img src="https://i.postimg.cc/v84Fqkyz/setting.png" /></li> */}
+
 							</ul>
 						</div>
 						<div class="container-p">
@@ -226,12 +205,21 @@ function Call() {
 							</div>
 							<div>
 								{receivingCall && !callAccepted ? (
-									<div className="caller">
-										<h1 >{name} is calling...</h1>
-										<Button variant="contained" color="primary" onClick={answerCall}>
-											Answer
-										</Button>
-									</div>
+									<>
+										<div className="caller">
+											<h1 class="text-white" >{name} is calling...</h1>
+											<Button variant="contained" color="primary" onClick={answerCall}>
+												Answer
+											</Button>
+										</div>
+										<audio id="audio" ref={ringavd} autoPlay hidden loop>
+
+											<source src={ringingaudio
+											} type="audio/mpeg" />
+											Your browser does not support the audio element.
+										</audio>
+									</>
+
 								) : null}
 							</div>
 							<div class="row-p">
@@ -245,29 +233,20 @@ function Call() {
 										</div>
 									</>) :
 										<img src="https://i.postimg.cc/521rVkhD/image.png" class="ratio ratio-16x9" />}
-
+									{receivingCall ? (
+										<>
+											<div class="contarols-p">
+												<button class="btn bg-transparent" onClick={leaveCall}><img src="https://i.postimg.cc/fyJH8G00/call.png" class="call-icon-p" /></button>
+											</div>
+										</>
+									) : null}
 								</div>
 								<div class="col-2-p">
 									<div class="joined-p">
 										<p class="text-warning">My video</p>
 
 										<div>
-											{stream && <video playsInline id="myav" muted autoPlay class="ratio ratio-16x9" />}
-											{/* <TextField
-                                                id="filled-basic"
-                                                label="ID to call"
-                                                variant="filled"
-                                                value={idToCall}
-                                                onChange={(e) => setIdToCall(e.target.value)}
-                                            /> */}
-											{/* <IconButton color="primary" aria-label="call" onClick={() => callUser(idToCall)}>
-                                                <PhoneIcon fontSize="large" />
-                                            </IconButton> */}
-											{/* <img src="https://i.postimg.cc/WzFnG0QG/people-1.png" />
-                                            <img src="https://i.postimg.cc/fRhGbb92/people-2.png" />
-                                            <img src="https://i.postimg.cc/02mgxSbK/people-3.png" />
-                                            <img src="https://i.postimg.cc/K8rd3y7Z/people-4.png" />
-                                            <img src="https://i.postimg.cc/HWFGfzsC/people-5.png" /> */}
+											<video playsInline muted ref={myVideo} autoPlay class="ratio ratio-16x9" />
 										</div>
 
 									</div>

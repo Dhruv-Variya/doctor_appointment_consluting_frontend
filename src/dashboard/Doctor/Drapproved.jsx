@@ -21,14 +21,21 @@ function Drapproved() {
         if (time == 12) {
             curTime = `${time}:00 pm`
         }
+
         else {
             time = time - 12;
-            curTime = `0${time}:00 pm`;
+            if (time >= 10) {
+                curTime = `${time}:00 pm`
+            }
+            else {
+                curTime = `0${time}:00 pm`;
+            }
+
         }
 
     }
     else {
-        if (curTime >= 10) {
+        if (time >= 10) {
             curTime = `${time}:00 am`;
         }
         else {

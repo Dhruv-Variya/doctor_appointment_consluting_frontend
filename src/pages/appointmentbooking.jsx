@@ -122,6 +122,9 @@ function Appointmentbooking() {
       navigate('/index');
     }
   }
+  const goHome = (e) => {
+    navigate('/index');
+  }
 
 
 
@@ -220,7 +223,7 @@ function Appointmentbooking() {
                     </p>
                   </div>
                   <div class="modal-footer">
-                    <a class="btn badge badge-sm btn-primary" href='/index'>Home</a>
+                    <button onClick={(e) => goHome(e)} class="btn badge badge-sm btn-primary" >Home</button>
 
                   </div>
                 </div>

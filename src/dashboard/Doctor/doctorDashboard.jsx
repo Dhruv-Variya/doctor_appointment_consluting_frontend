@@ -37,8 +37,8 @@ function DoctorDashboard() {
     // }
     const location = useLocation();
     const navigate = useNavigate();
-    var [drdetails, setdrdetails] = useState(true);
-    var [drpendding, setdrpendding] = useState(false);
+    var [drdetails, setdrdetails] = useState(false);
+    var [drpendding, setdrpendding] = useState(true);
     var [drdone, setdrdone] = useState(false);
     var [drapproved, setdrapproved] = useState(false);
     const token = localStorage.getItem('doctortoken');
